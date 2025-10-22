@@ -1,20 +1,15 @@
 /**
  * Nhiem vu :
 
-
-
- * 4, CD rotate
-
- * 6, Random
-
  * 8, Active song
  * 9, Scroll activesong in to view
  * 10, Play song when click
+ * 11, acr volume
  */
 
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
-
+const PlAYER_STORAGE_KEY = 'MUSIC_PLAYER_CONFIG'
 const cdThumb = $('.cd-thumb')
 const title = $('header h2')
 const singer = $('header #singer')
@@ -31,6 +26,7 @@ const repeatBtn = $('.btn-repeat')
 let isPlaying = false
 let isRandom = false
 let isRepeat = false
+const cdAnimation = cdThumb.animate([{transform: "rotate(0deg)"},{transform: "rotate(360deg"}], {duration:10000, iterations: Infinity})
 
 const app = {
   
@@ -84,6 +80,29 @@ const app = {
         "https://a10.gaanacdn.com/gn_img/albums/YoEWlabzXB/oEWlj5gYKz/size_xxl_1586752323.webp"
     }
   ],
+    config:{},
+    config: JSON.parse(localStorage.getItem(PlAYER_STORAGE_KEY)) || {},
+    setConfig: function (key, value) {
+    this.config[key] = value;
+    // (2/2) Uncomment the line below to use localStorage
+    localStorage.setItem(PlAYER_STORAGE_KEY, JSON.stringify(this.config));
+  },
+    displayActiveSong : function(){
+      const _this = this
+      const playlistSong = $$('.playlist .song')
+      playlistSong.forEach(function(song, index){
+        if(index === _this.currentIndex ){
+          song.classList.add('active')
+          song.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest'
+          })
+        }
+        else{
+          song.classList.remove('active')
+        }
+      })
+    },
   //render bai hat dang chay
     loadCurrentSong : function(){
         player.classList.remove('playing')
@@ -92,6 +111,9 @@ const app = {
         singer.innerText = `${this.songs[this.currentIndex].singer}`
         cdThumb.style.backgroundImage = `url('${this.songs[this.currentIndex].image}')`
         audio.src = `${this.songs[this.currentIndex].path}`
+        if(playlist.innerHTML !== ''){
+          this.displayActiveSong()
+        }
   },
   //render play list ra man hinh
     renderPlaylist: function(){
@@ -114,6 +136,7 @@ const app = {
         playlist.innerHTML = https.join(' ')
 
   },
+
   handleEvents : function(){
     const _this = this
     //xu li cuon trang
@@ -130,11 +153,13 @@ const app = {
         player.classList.add('playing')
         isPlaying = true
         audio.play()
+        cdAnimation.play()
       }
       else{
         player.classList.remove('playing')
         isPlaying = false
         audio.pause()
+        cdAnimation.pause()
       }
     }
     //xu li audio
@@ -151,6 +176,17 @@ const app = {
     }
     audio.onended = function(){
       if(isRepeat){
+        audio.play()
+      }
+      else if(isRandom){
+        let newIndex 
+        do{
+          newIndex = Math.floor(Math.random() * _this.songs.length)
+        }while(newIndex === _this.currentIndex)
+        _this.currentIndex = newIndex
+        _this.loadCurrentSong()
+        player.classList.add('playing')
+        isPlaying = true
         audio.play()
       }
       else{
@@ -181,27 +217,46 @@ const app = {
     //xu li nur random
     randomBtn.onclick = function(){
       isRandom = !isRandom
+      _this.setConfig("isRandom", _this.isRandom)
       randomBtn.classList.toggle('active', isRandom)
     }
 
     //xu li nut repeat
     repeatBtn.onclick = function(){
       isRepeat = !isRepeat
+      _this.setConfig("isRepeat", _this.isRepeat)
       repeatBtn.classList.toggle('active', isRepeat)
     }
-
-
+    //Chon bai
+    const songElements = $$('.playlist .song')
+    songElements.forEach(function(songElement,index){
+      songElement.onclick = function(){
+        _this.currentIndex = index
+        _this.loadCurrentSong()
+        player.classList.add('playing')
+        isPlaying = true
+        audio.play()
+        cdAnimation.play()
+      }
+    })
   },
-
+  loadConfig: function () {
+    const PlAYER_STORAGE_KEY = 'MUSIC_PLAYER_CONFIG';
+    this.config = JSON.parse(localStorage.getItem(PlAYER_STORAGE_KEY)) || {};
+    this.isRandom = this.config.isRandom ?? false;
+    this.isRepeat = this.config.isRepeat ?? false;
+  },
   
 
 
 
   //ham khoi dong
     start : function(){
-        this.loadCurrentSong()
-        this.renderPlaylist()
-        this.handleEvents()
+        cdAnimation.pause()
+        this.loadConfig()
+        this.renderPlaylist()        
+        this.loadCurrentSong()      
+        this.handleEvents() 
   }
 }
 
