@@ -128,7 +128,7 @@ const app = {
             <p class = 'author'>${song.singer}</p>
         </div>
         <div class="option">
-            <i class="fas fa-ellispsis-h"></i>
+            <i class="fas fa-ellipsis-h"></i>
         </div>
         </div>
         `
