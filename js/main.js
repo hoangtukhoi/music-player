@@ -1,11 +1,4 @@
-/**
- * Nhiem vu :
 
- * 8, Active song
- * 9, Scroll activesong in to view
- * 10, Play song when click
- * 11, acr volume
- */
 
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
